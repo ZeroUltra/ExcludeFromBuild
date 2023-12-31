@@ -1,0 +1,14 @@
+{
+  "name": "com.zeroultra.excludefrombuild",
+  "version": "0.0.1",
+  "displayName": "Exclude From Build",
+  "description": "Exclude From Build",
+  "documentationUrl": "https://github.com/ZeroUltra/ExcludeFromBuild",
+  "changelogUrl": "https://github.com/ZeroUltra/ExcludeFromBuild",
+  "licensesUrl": "https://github.com/ZeroUltra/ExcludeFromBuild",
+  "hideInEditor": false,
+  "keywords": ["Exclude","Build"],
+  "author": {
+    "name": "ZeroUltra"
+  }
+}
