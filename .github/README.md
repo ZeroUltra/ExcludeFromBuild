@@ -79,7 +79,13 @@ var buildReports = BuildPipeline.BuildPlayer(buildPlayerOptions);
 ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
 ```
 
-4. 由于使用了`IPreprocessBuildWithReport, IPostprocessBuildWithReport`,这两个接口，但是它们在打包AssetBundle不起作用，参考：https://docs.unity3d.com/ScriptReference/Build.IPreprocessBuildWithReport.OnPreprocessBuild.html，https://docs.unity3d.com/ScriptReference/Build.IPostprocessBuildWithReport.OnPostprocessBuild.html，所有在打包AssetBundle的时候，也做如下类似修改
+4. 由于使用了`IPreprocessBuildWithReport, IPostprocessBuildWithReport`,这两个接口，但是它们在打包AssetBundle不起作用，参考：
+
+   https://docs.unity3d.com/ScriptReference/Build.IPreprocessBuildWithReport.OnPreprocessBuild.html，
+
+   https://docs.unity3d.com/ScriptReference/Build.IPostprocessBuildWithReport.OnPostprocessBuild.html
+
+   所有在打包AssetBundle的时候，也做如下类似修改
 
 ```c#
  ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.BackupExcludeAssetsBeforeBuild();
