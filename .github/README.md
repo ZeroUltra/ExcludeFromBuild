@@ -45,7 +45,7 @@ Unity提供了一种特殊文件方式，用于忽略项目文件
 步骤：
 
 1. 标记需要排除的资源
-2. 在Build之前将资源移到`Editor`，并记录（原来是想着移到项目之外的文件夹，但是稍微麻烦些，因为还要移mate文件）
+2. 在Build之前将资源移到`Editor`，并记录（原来是想着移到项目之外的文件夹，但是稍微麻烦些）
 3. 打包Build完成或者Build失败之后要还原
 
 ## 使用方法
@@ -68,13 +68,23 @@ Unity提供了一种特殊文件方式，用于忽略项目文件
 1. 只适用于内置Build，没有测试SBP
 2. 打包时只能使用Unity自带得Build（也就是Build Setting窗口得`Build`和`Build And Run`）,因为使用了`BuildPlayerWindow.RegisterBuildPlayerHandler`来获取打包失败回调，具体查看：[Unity - Scripting API: BuildPlayerWindow.RegisterBuildPlayerHandler (unity3d.com)](https://docs.unity3d.com/ScriptReference/BuildPlayerWindow.RegisterBuildPlayerHandler.html)
 
-3. 如果是自定义打包，可以使用类似如下代码
+3. 如果是自定义打包，可以使用类似如下代码，需用`try finally` 防止过程出错
 
 ```c#
 //先备份
 ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.BackupExcludeAssetsBeforeBuild();
-//your code
-var buildReports = BuildPipeline.BuildPlayer(buildPlayerOptions);
+try
+{
+   var buildReports = BuildPipeline.BuildPlayer(buildPlayerOptions);
+}
+catch (Exception)
+{
+      throw;
+}
+finally 
+{ 
+     ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
+}
 //最后还原
 ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
 ```
@@ -89,9 +99,18 @@ ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
 
 ```c#
  ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.BackupExcludeAssetsBeforeBuild();
-//your code
- BuildPipeline.BuildAssetBundles("", BuildAssetBundleOptions.None, BuildTarget.Android);
- ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
+try
+{
+    BuildPipeline.BuildAssetBundles(outPath, BuildAssetBundleOptions.None, BuildTarget.Android);
+}
+catch (Exception)
+{
+      throw;
+}
+finally 
+{ 
+     ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
+}
 ```
 
 
