@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEditor;
+using UnityEditor.AssetImporters;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEngine;
+using static UnityEditor.Progress;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 using Path = System.IO.Path;
@@ -15,24 +19,21 @@ namespace ZeroUltra.ExcludeFormBuild
         /******************************************************
          * https://docs.unity3d.com/ScriptReference/Build.IPreprocessBuildWithReport.OnPreprocessBuild.html
          * https://docs.unity3d.com/ScriptReference/Build.IPostprocessBuildWithReport.OnPostprocessBuild.html
-         * This callback is invoked during Player builds, but not during AssetBundle builds. 
+         * This callback is invoked during Player builds, but not during AssetBundle builds.
          * If the build stops early, due to a failure or cancellation, then the callback is not invoked.
         ******************************************************/
 
         int IOrderedCallback.callbackOrder => 0;
 
-        public const string assetExcludeLable = "Exclude From Build";
+        public const string assetExcludeLable = "Excludefrombuild";
 
-        const string menu = "Assets/Exclude From Build";
-        const string logCyan = "<color=Cyan>{0}</color>";
-        const string backupFolder = "Assets/Editor/ExcludeFromBuildTemp/";
-
-        static List<(string basePath, string tempPath)> listTempPath = new List<(string basePath, string tempPath)>();
-
+        private const string menu = "Assets/Exclude From Build";
+        private const string logCyan = "<color=Cyan>{0}</color>";
+        private const string backupFolder = "Assets/Editor/ExcludeFromBuildTemp/";
 
 
         [MenuItem(menu, priority = 2000, validate = true)]
-        static bool ExcludeFrommBuildValidate()
+        private static bool ExcludeFrommBuildValidate()
         {
             var objs = Selection.objects;
             if (objs != null && objs.Length > 0)
@@ -44,7 +45,7 @@ namespace ZeroUltra.ExcludeFormBuild
         }
 
         [MenuItem(menu, priority = 2000, validate = false)]
-        static void ExcludeFrommBuild()
+        private static void ExcludeFrommBuild()
         {
             var objs = Selection.objects;
             if (objs != null && objs.Length > 0)
@@ -64,7 +65,6 @@ namespace ZeroUltra.ExcludeFormBuild
                 }
             }
         }
-
 
         /// <summary>
         /// 是否是Exclude From Build Lable
@@ -107,7 +107,7 @@ namespace ZeroUltra.ExcludeFormBuild
         }
 
         /// <summary>
-        /// Backup assets 
+        /// Backup assets
         /// </summary>
         public static void BackupExcludeAssetsBeforeBuild()
         {
@@ -116,51 +116,62 @@ namespace ZeroUltra.ExcludeFormBuild
             //if (!Directory.Exists(backupFolder))
             // Directory.CreateDirectory(backupFolder);
 
-            CreateFolder(backupFolder);
-            listTempPath.Clear();
-            var allObjs = AssetDatabase.FindAssets("t:Object");
-            foreach (var guid in allObjs)
+
+            //寻找所有被标记的资源
+            var excludeObjs = AssetDatabase.FindAssets("l:" + assetExcludeLable);
+            if (excludeObjs != null && excludeObjs.Length > 0)
             {
-                var basePath = AssetDatabase.GUIDToAssetPath(guid);
-                var obj = AssetDatabase.LoadMainAssetAtPath(basePath);
-                if (obj != null)
+                CreateFolder(backupFolder);
+                var excludePersistent = new ExcludeAssetsPersistentPath();
+                foreach (var guid in excludeObjs)
                 {
-                    if (IsExcludeFromBuildLable(obj, out List<string> _))
+                    var basePath = AssetDatabase.GUIDToAssetPath(guid);
+                    var obj = AssetDatabase.LoadMainAssetAtPath(basePath);
+                    if (obj != null)
                     {
-                        string tempPath = backupFolder + Path.GetFileName(basePath);
-                        AssetDatabase.MoveAsset(basePath, tempPath);
-                        listTempPath.Add((basePath, tempPath));
+                        string backupPath = backupFolder + Path.GetFileName(basePath);
+                        AssetDatabase.MoveAsset(basePath, backupPath);
+                        excludePersistent.listPath.Add(new ExcludeAssetsPersistentPath.AssetPath(backupPath, basePath));
                     }
                 }
-            }
-            foreach (var item in listTempPath)
-            {
-                Debug.Log($"Exclude From Build: [{item.basePath}]");
+                foreach (var item in excludePersistent.listPath)
+                {
+                    Debug.LogFormat(logCyan, $"Exclude From Build: [{item.BasePath}]");
+                }
+                //save to disk
+                var persistentExcludePath = Application.dataPath + "/../ProjectSettings/ExcludeFormBuilder.json";
+                excludePersistent.Save(persistentExcludePath);
             }
         }
+
         /// <summary>
         /// Restore assets
         /// </summary>
         public static void RestoreExcludeAssetsAfterBuild()
         {
-            foreach (var path in listTempPath)
+            var persistentExcludePath = Application.dataPath + "/../ProjectSettings/ExcludeFormBuilder.json";
+            var excludePersistent = ExcludeAssetsPersistentPath.Load(persistentExcludePath);
+            if (excludePersistent != null && excludePersistent.listPath.Count > 0)
             {
-                var result = AssetDatabase.MoveAsset(path.tempPath, path.basePath);
-                if (!string.IsNullOrEmpty(result))
+                foreach (var assetPath in excludePersistent.listPath)
                 {
-                    Debug.LogError($"{result}: {path.tempPath}->{path.basePath}");
+                    var result = AssetDatabase.MoveAsset(assetPath.BackupPath, assetPath.BasePath);
+                    Debug.LogFormat(logCyan, $"Restore From Build: [{assetPath.BackupPath}]");
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        Debug.LogError($"{result}: {assetPath.BackupPath}->{assetPath.BasePath}");
+                    }
                 }
+                //delete folder
+                AssetDatabase.DeleteAsset(backupFolder);
+                AssetDatabase.Refresh(); //这里要刷新一下 不知为何 
+                //如果Editor下没有任何文件 那么删除Editor文件夹
+                var assets = AssetDatabase.FindAssets("t:Object", new string[] { "Assets/Editor" });
+                if (assets.Length <= 0)
+                    AssetDatabase.DeleteAsset("Assets/Editor");
+                AssetDatabase.Refresh();
             }
-            listTempPath.Clear();
-            //delete folder
-            AssetDatabase.DeleteAsset(backupFolder);
-            AssetDatabase.Refresh(); //这里要刷新一下 不知为何 测试了下可以不用刷新的
-            var assets = AssetDatabase.FindAssets("t:Object", new string[] { "Assets/Editor" });
-            if (assets.Length <= 0)
-                AssetDatabase.DeleteAsset("Assets/Editor");
-            AssetDatabase.Refresh();
         }
-
 
         private static void CreateFolder(string folder)
         {
@@ -174,7 +185,40 @@ namespace ZeroUltra.ExcludeFormBuild
                 if (!AssetDatabase.IsValidFolder(sb.ToString()))
                     AssetDatabase.CreateFolder(tempPath, folderNames[i]);
             }
+        }
 
+        /// <summary>
+        /// 将资源路径可持久化保存 防止打包过程出现错误导致资源被删除
+        /// </summary>
+        [System.Serializable]
+        private class ExcludeAssetsPersistentPath
+        {
+            public List<AssetPath> listPath = new List<AssetPath>();
+
+            [System.Serializable]
+            public class AssetPath
+            {
+                public string BackupPath;
+                public string BasePath;
+                public AssetPath(string backupPath, string basePath)
+                {
+                    BackupPath = backupPath;
+                    BasePath = basePath;
+                }
+            }
+
+            public void Save(string path)
+            {
+                File.WriteAllText(path, JsonUtility.ToJson(this, true));
+            }
+
+            public static ExcludeAssetsPersistentPath Load(string path)
+            {
+                if (File.Exists(path))
+                    return JsonUtility.FromJson<ExcludeAssetsPersistentPath>(File.ReadAllText(path));
+                else
+                    return null;
+            }
         }
     }
 }
