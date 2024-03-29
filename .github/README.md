@@ -85,8 +85,7 @@ finally
 { 
      ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
 }
-//最后还原
-ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
+
 ```
 
 4. 由于使用了`IPreprocessBuildWithReport, IPostprocessBuildWithReport`,这两个接口，但是它们在打包AssetBundle不起作用，参考：
