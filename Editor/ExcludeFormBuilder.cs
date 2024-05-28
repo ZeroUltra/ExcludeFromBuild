@@ -31,6 +31,8 @@ namespace ZeroUltra.ExcludeFormBuild
         private const string logCyan = "<color=Cyan>{0}</color>";
         private const string backupFolder = "Assets/Editor/ExcludeFromBuildTemp/";
 
+        private static string persistentExcludePath => Application.dataPath + "/../ProjectSettings/ExcludeFormBuilder.json";
+
 
         [MenuItem(menu, priority = 2000, validate = true)]
         private static bool ExcludeFrommBuildValidate()
@@ -58,11 +60,30 @@ namespace ZeroUltra.ExcludeFormBuild
                     //    continue;
                     //}
                     if (IsExcludeFromBuildLable(obj, out List<string> listLables))
+                    {
                         listLables.Remove(assetExcludeLable);
+                    }
                     else
+                    { 
                         listLables.Add(assetExcludeLable);
+                    }
                     AssetDatabase.SetLabels(obj, listLables.ToArray());
+                    AssetDatabase.Refresh();
                 }
+
+                var excludeObjs = AssetDatabase.FindAssets("l:" + assetExcludeLable);
+                var excludePersistent = new ExcludeAssetsPersistentPath();
+                foreach (var guid in excludeObjs)
+                {
+                    var basePath = AssetDatabase.GUIDToAssetPath(guid);
+                    var obj = AssetDatabase.LoadMainAssetAtPath(basePath);
+                    if (obj != null)
+                    {
+                        string backupPath = backupFolder + Path.GetFileName(basePath);
+                        excludePersistent.listPath.Add(new ExcludeAssetsPersistentPath.AssetPath(backupPath, basePath));
+                    }
+                }
+                excludePersistent.Save(persistentExcludePath);
             }
         }
 
@@ -116,13 +137,11 @@ namespace ZeroUltra.ExcludeFormBuild
             //if (!Directory.Exists(backupFolder))
             // Directory.CreateDirectory(backupFolder);
 
-
             //寻找所有被标记的资源
             var excludeObjs = AssetDatabase.FindAssets("l:" + assetExcludeLable);
             if (excludeObjs != null && excludeObjs.Length > 0)
             {
                 CreateFolder(backupFolder);
-                var excludePersistent = new ExcludeAssetsPersistentPath();
                 foreach (var guid in excludeObjs)
                 {
                     var basePath = AssetDatabase.GUIDToAssetPath(guid);
@@ -131,16 +150,8 @@ namespace ZeroUltra.ExcludeFormBuild
                     {
                         string backupPath = backupFolder + Path.GetFileName(basePath);
                         AssetDatabase.MoveAsset(basePath, backupPath);
-                        excludePersistent.listPath.Add(new ExcludeAssetsPersistentPath.AssetPath(backupPath, basePath));
                     }
                 }
-                foreach (var item in excludePersistent.listPath)
-                {
-                    Debug.LogFormat(logCyan, $"Exclude From Build: [{item.BasePath}]");
-                }
-                //save to disk
-                var persistentExcludePath = Application.dataPath + "/../ProjectSettings/ExcludeFormBuilder.json";
-                excludePersistent.Save(persistentExcludePath);
             }
         }
 
@@ -149,7 +160,6 @@ namespace ZeroUltra.ExcludeFormBuild
         /// </summary>
         public static void RestoreExcludeAssetsAfterBuild()
         {
-            var persistentExcludePath = Application.dataPath + "/../ProjectSettings/ExcludeFormBuilder.json";
             var excludePersistent = ExcludeAssetsPersistentPath.Load(persistentExcludePath);
             if (excludePersistent != null && excludePersistent.listPath.Count > 0)
             {
