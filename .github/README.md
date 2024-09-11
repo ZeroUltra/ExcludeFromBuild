@@ -64,7 +64,7 @@ public class NewMonoBehaviour : MonoBehaviour
 
 *tips:如果你的projects视图也是`two column layout`,不要选左边目录栏，unity将不认*
 
-**ok。已经完成了所有操作，接下来就可以打包了**
+OK已经完成了所有操作，接下来就可以打包了
 
 ## 注意事项
 

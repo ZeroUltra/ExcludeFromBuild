@@ -33,7 +33,6 @@ namespace ZeroUltra.ExcludeFormBuild
         private static string backupFolder => Application.dataPath.Replace("Assets", string.Empty) + "ExcludeFromBuildTemp/";
 
 
-
         [MenuItem(menu, priority = 2000, validate = true)]
         private static bool ExcludeFrommBuildValidate()
         {
