@@ -1,19 +1,5 @@
 
 
-# 此库有问题, 勿用勿用勿用!!!
-
-​	问题在于,即使引用了Editor中的文件夹也还是会被打到包体中,脚本除外
-
-***
-
-***
-
-***
-
-***
-
-
-
 # ExcludeFromBuild
 
 作用：在Build Unity工程的时候排除不参与打包的资源
@@ -40,7 +26,7 @@ public class NewMonoBehaviour : MonoBehaviour
 
 ![image-20231231190825083](https://raw.githubusercontent.com/ZeroUltra/MediaLibrary/main/Imgs/202312311908857.png)
 
-Unity提供了一种特殊文件方式，用于忽略项目文件
+当然Unity提供了一种特殊文件方式，用于忽略项目文件
 
 [Unity - Manual: Special folder names (unity3d.com)](https://docs.unity3d.com/Manual/SpecialFolders.html)
 
@@ -54,15 +40,15 @@ Unity提供了一种特殊文件方式，用于忽略项目文件
 
 但是这种方式有两个麻烦点
 
-1. 要手动修改文件（文件夹）格式（这个还好说能用代码修改）
-2. 第二就是如果把文件修改，如将`Test.cs`->`Test.cs~`,那么它的meta文件也会消失，这个不是很友好
+1. 要手动修改文件（文件夹）格式（这个容易）
+2. 第二就是如果把`文件`修改，如将`Test.cs`->`Test.cs~`,那么它的meta文件也会消失，就很蛋疼
 
 ## 解决方案
 
 步骤：
 
 1. 标记需要排除的资源
-2. 在Build之前将资源移到`Editor`，并记录（原来是想着移到项目之外的文件夹，但是稍微麻烦些）
+2. 在Build之前将资源和.meta移到`项目Assets之外`，并记录
 3. 打包Build完成或者Build失败之后要还原
 
 ## 使用方法
@@ -74,9 +60,9 @@ Unity提供了一种特殊文件方式，用于忽略项目文件
 
 ![222](https://raw.githubusercontent.com/ZeroUltra/MediaLibrary/main/Imgs/202312311938476.gif)
 
-​	**鼠标右键->Exclude From Build**，会将资源标记，如果已经标记了再次选择则会排除
+**鼠标右键->Exclude From Build**，会将资源标记，如果已经标记了再次选择则会排除
 
-​	*tips:如果你的projects视图也是`two column layout`,不要选左边目录栏，unity将不认*
+*tips:如果你的projects视图也是`two column layout`,不要选左边目录栏，unity将不认*
 
 **ok。已经完成了所有操作，接下来就可以打包了**
 
@@ -85,13 +71,14 @@ Unity提供了一种特殊文件方式，用于忽略项目文件
 1. 只适用于内置Build，没有测试SBP
 2. 打包时只能使用Unity自带得Build（也就是Build Setting窗口得`Build`和`Build And Run`）,因为使用了`BuildPlayerWindow.RegisterBuildPlayerHandler`来获取打包失败回调，具体查看：[Unity - Scripting API: BuildPlayerWindow.RegisterBuildPlayerHandler (unity3d.com)](https://docs.unity3d.com/ScriptReference/BuildPlayerWindow.RegisterBuildPlayerHandler.html)
 
-3. 如果是自定义打包，可以使用类似如下代码，需用`try finally` 防止过程出错
+3. 如果使用自定义代码打包，可以使用类似如下代码，需用`try finally` 防止过程出错
 
 ```c#
 //先备份
 ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.BackupExcludeAssetsBeforeBuild();
 try
 {
+    //模拟打app 
    var buildReports = BuildPipeline.BuildPlayer(buildPlayerOptions);
 }
 catch (Exception)
@@ -100,6 +87,7 @@ catch (Exception)
 }
 finally 
 { 
+    //最后还原
      ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
 }
 
