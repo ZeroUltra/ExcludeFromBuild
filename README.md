@@ -69,9 +69,12 @@ OK已经完成了所有操作，接下来就可以打包了
 ## 注意事项
 
 1. 只适用于内置Build，没有测试SBP
+
 2. 打包时只能使用Unity自带得Build（也就是Build Setting窗口得`Build`和`Build And Run`）,因为使用了`BuildPlayerWindow.RegisterBuildPlayerHandler`来获取打包失败回调，具体查看：[Unity - Scripting API: BuildPlayerWindow.RegisterBuildPlayerHandler (unity3d.com)](https://docs.unity3d.com/ScriptReference/BuildPlayerWindow.RegisterBuildPlayerHandler.html)
 
-3. 如果使用自定义代码打包，可以使用类似如下代码，需用`try finally` 防止过程出错
+3. 如果使用自定义代码打包,先注释`ExcludeFormBuilder.cs`代码中`BackupExcludeAssetsBeforeBuild`，然后可以使用类似如下代码，需用`try finally` 防止过程出错
+
+     ![image-20250627142323856](C:\Users\y\AppData\Roaming\Typora\typora-user-images\image-20250627142323856.png)
 
 ```c#
 //先备份
@@ -90,8 +93,9 @@ finally
     //最后还原
      ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.RestoreExcludeAssetsAfterBuild();
 }
-
 ```
+
+
 
 4. 由于使用了`IPreprocessBuildWithReport, IPostprocessBuildWithReport`,这两个接口，但是它们在打包AssetBundle不起作用，参考：
 
@@ -102,7 +106,7 @@ finally
    所有在打包AssetBundle的时候，也做如下类似修改
 
 ```c#
- ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.BackupExcludeAssetsBeforeBuild();
+ZeroUltra.ExcludeFormBuild.ExcludeFormBuilder.BackupExcludeAssetsBeforeBuild();
 try
 {
     BuildPipeline.BuildAssetBundles(outPath, BuildAssetBundleOptions.None, BuildTarget.Android);

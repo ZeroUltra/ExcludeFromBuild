@@ -6,7 +6,6 @@
   "documentationUrl": "https://github.com/ZeroUltra/ExcludeFromBuild",
   "changelogUrl": "https://github.com/ZeroUltra/ExcludeFromBuild",
   "licensesUrl": "https://github.com/ZeroUltra/ExcludeFromBuild",
-  "hideInEditor": false,
   "keywords": ["Exclude","Build"],
   "author": {
     "name": "ZeroUltra"

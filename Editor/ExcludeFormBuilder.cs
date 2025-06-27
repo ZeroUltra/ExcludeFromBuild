@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEditor;
-using UnityEditor.AssetImporters;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
-using static UnityEditor.Progress;
-using static ZeroUltra.ExcludeFormBuild.ExcludeAssetsPersistentPath;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 using Path = System.IO.Path;
@@ -136,9 +132,9 @@ namespace ZeroUltra.ExcludeFormBuild
                         string backupPath = backupFolder + Path.GetFileName(basePath);
                         excludePersistent.listPath.Add(new ExcludeAssetsPersistentPath.AssetPath(backupPath, basePath));
                         string fullBasePath = Path.GetFullPath(basePath);
-                        var att = File.GetAttributes(fullBasePath);
                         try
                         {
+                            var att = File.GetAttributes(fullBasePath);
                             if (att == FileAttributes.Directory)
                             {
                                 Directory.Move(fullBasePath, backupPath);
@@ -230,17 +226,6 @@ namespace ZeroUltra.ExcludeFormBuild
         {
             if (File.Exists(persistentExcludePath))
                 JsonUtility.FromJsonOverwrite(File.ReadAllText(persistentExcludePath), this);
-        }
-    }
-    public class ScriptsProcessor : AssetModificationProcessor
-    {
-        static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions option)
-        {
-            if (option == RemoveAssetOptions.MoveAssetToTrash)
-            {
-
-            }
-            return AssetDeleteResult.DidNotDelete;
         }
     }
 }
