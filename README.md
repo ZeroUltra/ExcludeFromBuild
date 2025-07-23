@@ -74,7 +74,7 @@ OK已经完成了所有操作，接下来就可以打包了
 
 3. 如果使用自定义代码打包,先注释`ExcludeFormBuilder.cs`代码中`BackupExcludeAssetsBeforeBuild`，然后可以使用类似如下代码，需用`try finally` 防止过程出错
 
-     ![image-20250627142323856](C:\Users\y\AppData\Roaming\Typora\typora-user-images\image-20250627142323856.png)
+     ![image-20250627142323856](https://raw.githubusercontent.com/ZeroUltra/MediaLibrary/main/Imgs/202507231140597.png)
 
 ```c#
 //先备份
