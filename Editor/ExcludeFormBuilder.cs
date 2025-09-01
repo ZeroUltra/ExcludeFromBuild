@@ -25,7 +25,7 @@ namespace ZeroUltra.ExcludeFormBuild
         private const string logCyan = "<color=Cyan>{0}</color>";
         private const string logYellow = "<color=#ffa500>{0}</color>";
 
-        int IOrderedCallback.callbackOrder => 0;
+        int IOrderedCallback.callbackOrder => 20000;
         private static string backupFolder => Application.dataPath.Replace("Assets", string.Empty) + "ExcludeFromBuildTemp/";
 
 
